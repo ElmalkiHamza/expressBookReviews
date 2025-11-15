@@ -14,10 +14,20 @@ app.use("/customer", session({secret:"fingerprint_customer",resave: true, saveUn
 
 // To reject requests sent by non-authenticated users
 app.use("/customer/auth/*", function auth(req,res,next){
-    if(!req.session.authorization){
-        return res.status(403).json({message: "Unauthorized access"});
-    } 
-    next();
+    const token = req.session.jwt
+    
+    if (!token) {
+        return res.status(401).json({message: "Login"})
+    }
+
+    jwt.verify(token, "my_secret_key", (err, decoded) => {
+        if (err) {
+            return res.status(401).json({message: "Token is invalid"})
+        } else {
+            req.user = decoded
+            next()
+        }
+    })
 });
 
 // 
